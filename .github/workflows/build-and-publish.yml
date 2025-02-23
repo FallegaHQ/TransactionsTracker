@@ -82,7 +82,7 @@ jobs:
                 run: |
                     ZIP_NAME="release-${{ needs.determine-version.outputs.new_version }}.zip"
                     zip -r $ZIP_NAME . \
-                        -x ".git*/*" -x ".git*" \
+                        -x ".git*/*" -x ".git*" -x ".chglog/*" \
                         -x "backend/vendor/*" -x "backend/.git*" -x "backend/node_modules/*" \
                         -x "frontend/.vite/*" -x "frontend/dist/*" -x "frontend/.git*" -x "frontend/node_modules/*"    
                     mv $ZIP_NAME /tmp/
