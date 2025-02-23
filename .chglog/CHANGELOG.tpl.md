@@ -1,8 +1,6 @@
 {{ if .Versions }}
-# Changelog
-
 {{ range .Versions }}
-## [{{ .Tag.Name }}] - {{ datetime "2006-01-02 16:25" .Tag.Date }}
+## [{{ .Tag.Name }}] - {{ datetime "2006-01-02" .Tag.Date }}
 
 {{ if .Commits }}
 ### Changed
