@@ -1,0 +1,86 @@
+services:
+    frontend:
+        build:
+            context: .
+            dockerfile: ./docker/frontend/Dockerfile
+        depends_on:
+            - backend
+        ports:
+            - "5173:5173"
+            - "8000:80"
+        volumes:
+            - ./frontend:/var/www/html
+            - ./docker/apache/frontend.conf:/etc/apache2/sites-available/000-default.conf
+        environment:
+            - APACHE_DOCUMENT_ROOT=/var/www/html/dist/
+            - API_URL="http://127.0.0.1/api/v1"
+        working_dir: /var/www/html
+        entrypoint: ["/bin/sh","-c"]
+        command:
+            - |
+                yarn
+                apache2-foreground & yarn run dev
+        networks:
+            - xtt-net
+
+    backend:
+        build:
+            context: .
+            dockerfile: ./docker/backend/Dockerfile
+        depends_on:
+            - mysql
+            - mailpit
+        ports:
+            - "80:80"
+            # 9003 is not needed :o)
+            - "9003:9003"
+        volumes:
+            - ./backend:/var/www/html
+            - ./docker/apache/backend.conf:/etc/apache2/sites-available/000-default.conf
+            - ./docker/php/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+        environment:
+            - APACHE_DOCUMENT_ROOT=/var/www/html/public
+        working_dir: /var/www/html
+        entrypoint: ["/bin/sh","-c"]
+        command:
+            - |
+                composer install --no-interaction --no-scripts --no-autoloader
+                composer dump-autoload --optimize
+                apache2-foreground
+        networks:
+            - xtt-net
+
+    mysql:
+        image: mysql:8.0
+        environment:
+            - MYSQL_ROOT_PASSWORD=justatestpassshouldntcommit
+            - MYSQL_DATABASE=backend
+            - MYSQL_USER=backend
+            - MYSQL_PASSWORD=justatestpassshouldntcommit
+        volumes:
+            - mysqldata:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+        ports:
+            - '3306:3306'
+        networks:
+            - xtt-net
+
+    mailpit:
+        image: 'axllent/mailpit:latest'
+        ports:
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+        networks:
+            - xtt-net
+
+volumes:
+    mysqldata:
+        driver: local
+        driver_opts:
+            type: none
+            device: ./docker/mysql/data
+            o: bind
+
+networks:
+    xtt-net:
+        driver: bridge
