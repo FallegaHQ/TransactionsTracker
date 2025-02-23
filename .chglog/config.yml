@@ -1,0 +1,36 @@
+# .chglog/config.yml
+sort_tags_by: semver
+types:
+    - type: feat
+      description: Features
+      emoji: ✨
+    - type: fix
+      description: Bug Fixes
+      emoji: 🐛
+    - type: docs
+      description: Documentation
+      emoji: 📚
+    - type: style
+      description: Styles
+      emoji: 💄
+    - type: refactor
+      description: Refactors
+      emoji: 🔨
+    - type: perf
+      description: Performance Improvements
+      emoji: ⚡
+    - type: test
+      description: Tests
+      emoji: ✅
+    - type: chore
+      description: Chores
+      emoji: 🔧
+    - type: build
+      description: Build System
+      emoji: 🏗
+    - type: ci
+      description: Continuous Integration
+      emoji: 👷‍♂️
+    - type: revert
+      description: Reverts
+      emoji: ⏪
