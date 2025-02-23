@@ -4,11 +4,13 @@
 {{ range .Versions }}
 ## [{{ .Tag }}] - {{ datetime "2006-01-02 16:25" .Tag.Date }}
 
-{{ if .Changes }}
+{{ if .Commits }}
 ### Changed
-{{ range .Changes }}
-- {{ .Header }}
-  {{ end }}
+{{ range .Commits }}
+- {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ .Subject }}
+  {{ if .TrimmedBody -}}
+  {{ indent .TrimmedBody 2 }}
+  {{ end -}}
   {{ end }}
 
 {{ end }}
