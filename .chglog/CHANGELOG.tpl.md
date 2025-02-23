@@ -7,7 +7,7 @@
 {{ if .Commits }}
 ### Changed
 {{ range .Commits }}
-- {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ if .Icon }}{{ .Icon }} {{ end }}{{ .Subject }}
+- {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ end }}{{ .Subject }}
   {{ if .TrimmedBody -}}
   {{ indent .TrimmedBody 2 }}
   {{ end -}}
