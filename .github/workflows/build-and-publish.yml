@@ -31,11 +31,6 @@ jobs:
                     DEFAULT_BUMP: patch
                     TAG_CONTEXT: repo
 
-            -   name: Create Git Tag
-                run: |
-                    git tag ${{ steps.new_version.outputs.new_tag }}
-                    git push origin ${{ steps.new_version.outputs.new_tag }}
-
     generate-changelog:
         needs: determine-version
         runs-on: ubuntu-latest
@@ -117,6 +112,5 @@ jobs:
             -   name: Publish GitHub Release
                 uses: softprops/action-gh-release@v2
                 with:
-                    tag_name: ${{ needs.determine-version.outputs.new_version }}
                     body_path: CHANGELOG.md
                     files: /tmp/release-*.zip
