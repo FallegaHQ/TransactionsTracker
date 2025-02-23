@@ -2,7 +2,7 @@
 # Changelog
 
 {{ range .Versions }}
-## [{{ .Tag }}] - {{ .Date }}
+## [{{ .Tag }}] - {{ datetime "2006-01-02 16:25" .Tag.Date }}
 
 {{ if .Changes }}
 ### Changed
