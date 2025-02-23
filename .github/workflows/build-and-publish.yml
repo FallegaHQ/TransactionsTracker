@@ -1,0 +1,117 @@
+name: Build and Publish ZIP
+
+on:
+    push:
+        branches:
+            - master
+    repository_dispatch:
+        types: [ submodule_update ]
+    workflow_dispatch:
+
+jobs:
+    determine-version:
+        runs-on: ubuntu-latest
+        outputs:
+            new_version: ${{ steps.new_version.outputs.new_tag }}
+        steps:
+            -   name: Checkout Repository
+                uses: actions/checkout@v4
+                with:
+                    submodules: true
+
+            -   name: Get Previous Version
+                id: prev_version
+                run: echo "PREV_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo '0.0.0')" >> $GITHUB_ENV
+
+            -   name: Determine New Version
+                id: new_version
+                uses: anothrNick/github-tag-action@1.67.0
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    DEFAULT_BUMP: patch
+                    TAG_CONTEXT: repo
+
+    generate-changelog:
+        needs: determine-version
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout Repository
+                uses: actions/checkout@v4
+                with:
+                    submodules: true
+
+            -   name: Install Git Changelog Tool
+                run: |
+                    curl -sSL https://github.com/git-chglog/git-chglog/releases/download/v0.15.0/git-chglog_0.15.0_linux_amd64.tar.gz | tar -xz
+                    sudo mv git-chglog /usr/local/bin/
+
+            -   name: Generate Changelog
+                run: |
+                    echo "## Changelog for v${{ needs.determine-version.outputs.new_version }}" > CHANGELOG.md
+                    git-chglog --next-tag ${{ needs.determine-version.outputs.new_version }} > changelog.txt
+                    cat changelog.txt >> CHANGELOG.md
+                    echo "" >> CHANGELOG.md
+                    echo "### Submodule Changes" >> CHANGELOG.md
+                    git submodule foreach --quiet 'echo "#### $name" >> ../CHANGELOG.md; git log --oneline --no-merges $(git describe --tags --abbrev=0 HEAD^)..HEAD >> ../CHANGELOG.md; echo "" >> ../CHANGELOG.md'
+
+            -   name: Commit and Push Changelog
+                run: |
+                    git config --global user.name "github-actions"
+                    git config --global user.email "github-actions@github.com"
+                    git add CHANGELOG.md
+                    git commit -m "Update changelog for v${{ needs.determine-version.outputs.new_version }}" || echo "No changes to commit"
+                    git push origin master || echo "No changes to push"
+
+            -   name: Upload Changelog Artifact
+                uses: actions/upload-artifact@v4
+                with:
+                    name: changelog
+                    path: CHANGELOG.md
+
+    build-zip:
+        needs: determine-version
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout Repository
+                uses: actions/checkout@v4
+                with:
+                    submodules: true
+                    fetch-depth: 1
+
+            -   name: Prepare ZIP Package
+                run: |
+                    ZIP_NAME="release-${{ needs.determine-version.outputs.new_version }}.zip"
+                    zip -r $ZIP_NAME . \
+                        -x ".git*/*" -x ".git*" \
+                        -x "backend/vendor/*" -x "backend/.git*" -x "backend/node_modules/*" \
+                        -x "frontend/.vite/*" -x "frontend/dist/*" -x "frontend/.git*" -x "frontend/node_modules/*"    
+                    mv $ZIP_NAME /tmp/
+
+            -   name: Upload ZIP Artifact
+                uses: actions/upload-artifact@v4
+                with:
+                    name: release-zip
+                    path: /tmp/release-*.zip
+
+    publish:
+        needs: [ build-zip, generate-changelog ]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Download ZIP Artifact
+                uses: actions/download-artifact@v4
+                with:
+                    name: release-zip
+                    path: /tmp/
+
+            -   name: Download Changelog Artifact
+                uses: actions/download-artifact@v4
+                with:
+                    name: changelog
+                    path: .
+
+            -   name: Publish GitHub Release
+                uses: softprops/action-gh-release@v2
+                with:
+                    tag_name: ${{ needs.determine-version.outputs.new_version }}
+                    body_path: CHANGELOG.md
+                    files: /tmp/release-*.zip
