@@ -31,8 +31,6 @@ jobs:
                     DEFAULT_BUMP: patch
                     TAG_CONTEXT: repo
 
-
-
             -   name: Create Git Tag
                 run: |
                     git tag ${{ steps.new_version.outputs.new_tag }}

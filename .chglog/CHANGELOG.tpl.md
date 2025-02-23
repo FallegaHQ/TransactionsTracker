@@ -2,17 +2,23 @@
 # Changelog
 
 {{ range .Versions }}
-## [{{ .Tag }}] - {{ datetime "2006-01-02 16:25" .Tag.Date }}
+## [{{ .Tag.Name }}] - {{ datetime "2006-01-02 16:25" .Tag.Date }}
 
 {{ if .Commits }}
 ### Changed
 {{ range .Commits }}
-- {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ .Subject }}
+- {{ if .Scope }}**{{ .Scope }}:** {{ end }}{{ if .Icon }}{{ .Icon }} {{ end }}{{ .Subject }}
   {{ if .TrimmedBody -}}
   {{ indent .TrimmedBody 2 }}
   {{ end -}}
   {{ end }}
 
+{{ else }}
+- No changes
+  {{ end }}
+
 {{ end }}
-{{ end }}
+
+{{ else }}
+No versions found.
 {{ end }}
