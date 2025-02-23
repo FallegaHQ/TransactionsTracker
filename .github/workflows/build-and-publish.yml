@@ -31,6 +31,13 @@ jobs:
                     DEFAULT_BUMP: patch
                     TAG_CONTEXT: repo
 
+
+
+            -   name: Create Git Tag
+                run: |
+                    git tag ${{ steps.new_version.outputs.new_tag }}
+                    git push origin ${{ steps.new_version.outputs.new_tag }}
+
     generate-changelog:
         needs: determine-version
         runs-on: ubuntu-latest
