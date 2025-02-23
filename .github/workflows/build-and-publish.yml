@@ -94,7 +94,7 @@ jobs:
                     path: /tmp/release-*.zip
 
     publish:
-        needs: [ build-zip, generate-changelog ]
+        needs: [ build-zip, generate-changelog, determine-version ]
         runs-on: ubuntu-latest
         steps:
             -   name: Download ZIP Artifact
